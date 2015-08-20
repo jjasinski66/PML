@@ -25,11 +25,8 @@ https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv
 
 ```{r}
 
-library(ggplot2)
-library(lattice)
 library(caret)
 library(rpart)
-#library(rpart.plot)
 library(rattle)
 library(randomForest)
 
@@ -87,7 +84,7 @@ modelDT <- rpart(classe ~ ., data=trainData, method='class')
 
 ## View the Decision Tree
 
-fancyRpartPlot(modelDT)
+fancyRpartPlot(modelDT, sub = '')
 
 # Predict and test
 dtPredictions <- predict(modelDT, testData, type="class")
