@@ -96,7 +96,10 @@ confusionMatrix(dtPredictions, testData$classe)
 
 ```
 
-The decision Tree had only a 72% acccuracy. Let's try the Random Forect and see if we can get better results.
+The decision Tree had only a 72% acccuracy.
+
+### Let's try the Random Forect and see if we can get better results.
+
 ```{r fig.width=10, fig.height=10}
 
 modelRF <- randomForest(classe ~ ., data=trainData)
