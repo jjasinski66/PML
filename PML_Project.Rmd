@@ -94,13 +94,17 @@ dtPredictions <- predict(modelDT, testData, type="class")
 
 confusionMatrix(dtPredictions, testData$classe)
 
+```
+
+The decision Tree had only a 72% acccuracy. I would expect a 28% error rate on this model.
+
+```{r}
+
 accuracy <- postResample(dtPredictions, testData$classe)
 accuracy
 outOfSampleError <- 1 - as.numeric(confusionMatrix(testData$classe, dtPredictions)$overall[1])
 outOfSampleError
 ```
-
-The decision Tree had only a 72% acccuracy, with a 28% out of sample error rate
 
 ### Let's try the Random Forect and see if we can get better results.
 
@@ -114,6 +118,11 @@ modelRF <- train(classe ~ ., data=trainData, method="rf", trControl=control, ntr
 rfPredictions <- predict(modelRF, testData, type="class")
 
 confusionMatrix(rfPredictions, testData$classe)
+```
+
+With an accuracy of 99.46% with the Random Forest, I would expect less than 1% error rate.
+
+```{r}
 
 accuracy <- postResample(rfPredictions, testData$classe)
 accuracy
@@ -122,7 +131,8 @@ outOfSampleError
 
 ```
 
-The Random Forest yielded much better results with over 99% accuracy and less than 1% out of Sample Error.
+The Random Forest yielded much better results than the Decision Tree, so I will use this model for my predictions.
+
 
 ### Generating files for submission using the Random Forest prediction model
 
