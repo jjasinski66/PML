@@ -1,7 +1,7 @@
 ---
 title: "Practical Machine Learning"
 author: "Jerry Jasinski"
-date: "08/18/2015"
+date: "08/20/2015"
 output: html_document
 ---
 
@@ -10,7 +10,7 @@ output: html_document
 
 Using devices such as Jawbone Up, Nike FuelBand, and Fitbit it is now possible to collect a large amount of data about personal activity relatively inexpensively. These type of devices are part of the quantified self movement – a group of enthusiasts who take measurements about themselves regularly to improve their health, to find patterns in their behavior, or because they are tech geeks. One thing that people regularly do is quantify how much of a particular activity they do, but they rarely quantify how well they do it. In this project, your goal will be to use data from accelerometers on the belt, forearm, arm, and dumbell of 6 participants. They were asked to perform barbell lifts correctly and incorrectly in 5 different ways. More information is available from the website here: http://groupware.les.inf.puc-rio.br/har (see the section on the Weight Lifting Exercise Dataset).
 
-#Data 
+## Data 
 
 
 The training data for this project are available here: 
@@ -21,7 +21,7 @@ The test data are available here:
 
 https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv
 
-# Libraries Needed
+## Libraries Needed
 
 ```{r}
 
@@ -29,7 +29,106 @@ library(ggplot2)
 library(lattice)
 library(caret)
 library(rpart)
+#library(rpart.plot)
+library(rattle)
+library(randomForest)
 
 ```
+
+### Reading and Cleaning the data from the CSV files.
+```{r cache=TRUE}
+trainRaw <- read.csv(url("https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv"), na.strings=c("NA", "#DIV/0!", ""))
+
+testRaw <- read.csv(url("https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv"), na.strings=c("NA", "#DIV/0!", ""))
+
+# Remove columns with NA/bad values.
+trainClean1 <- trainRaw[, colSums(is.na(testRaw)) == 0] 
+testClean1 <- testRaw[, colSums(is.na(testRaw)) == 0]
+
+# Store the classe column until after datasets are cleaned.
+trainAnswers <- trainRaw$classe
+
+# Remove columns that contain the strings "timestamp" or "window"
+unsedCols <- grepl("^X|timestamp|window", names(trainClean1))
+trainClean <- trainClean1[, !unsedCols]
+testClean <- testClean1[, !unsedCols]
+
+# Retain columns that are numeric.
+trainCleanFinal <- trainClean[, sapply(trainClean, is.numeric)]
+testCleanFinal <- testClean[, sapply(testClean, is.numeric)]
+
+# Put the trainAnswers column back to the cleaned training data.
+trainClean <- trainCleanFinal
+trainClean$classe <- trainAnswers
+
+testClean <- testCleanFinal
+
+dim(trainClean)
+dim(testClean)
+```
+
+### Split the test set for training and validation
+```{r}
+
+set.seed(13579)
+inTrainingSet <- createDataPartition(trainClean$classe, p=0.70, list=FALSE)
+trainData <- trainClean[inTrainingSet, ]
+testData <- trainClean[-inTrainingSet, ]
+dim(trainData)
+dim(testData)
+
+```
+
+### We will try Decision Trees First for our prediction Model
+
+```{r fig.width=10, fig.height=10}
+
+modelDT <- rpart(classe ~ ., data=trainData, method='class')
+
+## View the Decision Tree
+
+fancyRpartPlot(modelDT)
+
+# Predict and test
+dtPredictions <- predict(modelDT, testData, type="class")
+
+confusionMatrix(dtPredictions, testData$classe)
+
+```
+
+The decision Tree had only a 72% acccuracy. Let's try the Random Forect and see if we can get better results.
+```{r fig.width=10, fig.height=10}
+
+modelRF <- randomForest(classe ~ ., data=trainData)
+
+# Predict and test
+rfPredictions <- predict(modelRF, testData, type="class")
+
+confusionMatrix(rfPredictions, testData$classe)
+
+```
+
+The Random Forest yielded much better results at better than 99%
+
+### Generating files for submission using the Random Forest prediction model
+
+```{r}
+result <- predict(modelRF, testClean)
+
+path <- "./testPredictions"
+
+pml_write_files <- function(x){
+      n = length(x)
+      for(i in 1:n){
+            filename = paste0("problem_id_",i,".txt")
+            write.table(x[i], file=file.path(path, filename), quote=FALSE, row.names=FALSE, col.names=FALSE)
+            }
+}
+
+pml_write_files(result)
+
+```
+
+
 
 
